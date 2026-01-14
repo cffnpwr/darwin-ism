@@ -1,0 +1,14 @@
+{
+  "nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
+  "nixEnvSelector.useFlakes": true,
+  "nix.enableLanguageServer": true,
+  "nix.serverPath": "nil",
+  "[nix]": {
+    "editor.defaultFormatter": "brettm12345.nixfmt-vscode"
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.nix": "${capture}.test.nix",
+    "flake.nix": "flake.lock",
+  },
+}

@@ -1,0 +1,9 @@
+/darwin-ism
+*.o
+*.swp
+result
+result-*
+.DS_Store
+.idea/
+*.xcodeproj/
+*.xcworkspace/

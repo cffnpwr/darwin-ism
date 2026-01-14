@@ -1,0 +1,4 @@
+pre-commit:
+  commands:
+    check-swift-version:
+      run: sh scripts/check-swift-version.sh
