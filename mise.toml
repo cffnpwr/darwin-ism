@@ -1,2 +1,11 @@
 [tools]
+"aqua:numtide/treefmt" = "v2.4.0"
+"asdf:swiftformat" = "0.58.7"
+lefthook = "2.0.14"
 swift = "6.2.3"
+swiftlint = "0.63.0"
+
+[env]
+# Required for SwiftLint to find SourceKit framework
+_.path = "{{env.HOME}}/.local/share/mise/installs/swift/6.2.3/usr/lib"
+DYLD_FRAMEWORK_PATH = "{{env.HOME}}/.local/share/mise/installs/swift/6.2.3/usr/lib"

@@ -1,0 +1,10 @@
+# SwiftFormat configuration
+
+# Indentation
+--indent 2
+
+# Trailing commas only for multiline
+--commas inline
+
+# Exclude paths
+--exclude .build

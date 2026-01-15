@@ -1,0 +1,14 @@
+[global]
+excludes = [
+  ".build/**",
+  ".git/**",
+  "result/**",
+]
+
+[formatter.nix]
+command = "nixfmt"
+includes = ["*.nix"]
+
+[formatter.swift]
+command = "swiftformat"
+includes = ["*.swift"]

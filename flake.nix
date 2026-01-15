@@ -20,11 +20,13 @@
           pkgs' = pkgs.extend (
             final: prev: {
               swift_6 = import ./nix/swift.nix { pkgs = final; };
+              swiftlint = import ./nix/swiftlint.nix { pkgs = prev; };
+              swiftformat = import ./nix/swiftformat.nix { pkgs = prev; };
             }
           );
         in
         {
-          formatter = pkgs'.nixfmt;
+          formatter = pkgs'.treefmt;
 
           # Package build for nix build
           packages.default = import ./nix/darwin-ism.nix { pkgs = pkgs'; };
@@ -33,16 +35,17 @@
           devShells.default = pkgs'.mkShell {
             buildInputs = [ pkgs'.apple-sdk_15 ];
 
-            packages =
-              with pkgs';
-              [
-                git
-                lefthook
-                nil
-                nixd
-                nixfmt
-                swift_6
-              ];
+            packages = with pkgs'; [
+              git
+              lefthook
+              nil
+              nixd
+              nixfmt
+              swift_6
+              swiftformat
+              swiftlint
+              treefmt
+            ];
 
             shellHook = ''
               lefthook install
@@ -67,6 +70,11 @@
                 exec ''${USER_SHELL:-$SHELL}
               fi
             '';
+
+            # Required for SwiftLint to find SourceKit framework
+            DYLD_FRAMEWORK_PATH = "${pkgs'.swift_6}/lib";
+            # Backup for DYLD_FRAMEWORK_PATH (preserved after exec to user shell)
+            __NIX_SWIFT_LIB = "${pkgs'.swift_6}/lib";
           };
         };
     };

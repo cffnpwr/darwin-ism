@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: true
+  commands:
+    check-swift-version:
+      run: sh scripts/check-swift-version.sh
+
+    check-tool-versions:
+      run: sh scripts/check-tool-versions.sh
+
+    format:
+      glob: "*.{swift,nix}"
+      run: treefmt --fail-on-change {staged_files}
+      stage_fixed: true
+
+    lint:
+      glob: "*.swift"
+      run: DYLD_FRAMEWORK_PATH="${__NIX_SWIFT_LIB:-$DYLD_FRAMEWORK_PATH}" swiftlint lint --config .swiftlint.yaml --strict {staged_files}
