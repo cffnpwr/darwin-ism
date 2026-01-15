@@ -87,10 +87,7 @@ mise install
 3. ビルド
 
 ```bash
-swiftc -O -o darwin-ism \
-  -framework Carbon \
-  -framework Foundation \
-  Sources/darwin-ism/*.swift
+swift build
 ```
 
 または、Nixを使用する場合：
@@ -153,6 +150,19 @@ darwin-ism disable <id>
 ## How to setup development environment
 
 開発環境のセットアップは[「ソースからビルド」のPrerequisitesセクション](#Prerequisites)を参照してください。
+
+### Pre-commit Hook
+
+このプロジェクトではpre-commit hookに[lefthook](https://github.com/evilmartians/lefthook)を使用しています。
+Nix環境では`nix develop`時に自動でインストールされます。
+
+### Linter / Formatter
+
+| ツール | 用途 | 設定ファイル |
+|--------|------|--------------|
+| [SwiftFormat](https://github.com/nicklockwood/SwiftFormat) | Formatter | `.swiftformat` |
+| [SwiftLint](https://github.com/realm/SwiftLint) | Linter | `.swiftlint.yaml` |
+| [treefmt](https://github.com/numtide/treefmt) | Formatter multiplexer | `treefmt.toml` |
 
 ## License
 

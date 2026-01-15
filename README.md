@@ -87,10 +87,7 @@ Skip this step.
 3. Build
 
 ```bash
-swiftc -O -o darwin-ism \
-  -framework Carbon \
-  -framework Foundation \
-  Sources/darwin-ism/*.swift
+swift build
 ```
 
 Or, if using Nix:
@@ -153,6 +150,19 @@ darwin-ism disable <id>
 ## How to set up development environment
 
 For setting up the development environment, refer to the [Prerequisites section under "Build from Source"](#prerequisites).
+
+### Pre-commit Hook
+
+This project uses [lefthook](https://github.com/evilmartians/lefthook) for pre-commit hooks.
+In Nix environment, it is automatically installed when running `nix develop`.
+
+### Linter / Formatter
+
+| Tool | Purpose | Config File |
+|------|---------|-------------|
+| [SwiftFormat](https://github.com/nicklockwood/SwiftFormat) | Formatter | `.swiftformat` |
+| [SwiftLint](https://github.com/realm/SwiftLint) | Linter | `.swiftlint.yaml` |
+| [treefmt](https://github.com/numtide/treefmt) | Formatter multiplexer | `treefmt.toml` |
 
 ## License
 
