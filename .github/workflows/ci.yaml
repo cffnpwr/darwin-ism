@@ -54,7 +54,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@c5a866b6ab867e88becbed4467b93592bce69f8a # v21
 
       - name: Run SwiftLint
-        run: nix develop -c swiftlint lint --config .swiftlint.yaml --strict
+        run: nix develop .#ci-lint -c swiftlint lint --config .swiftlint.yaml --strict
 
   format:
     name: Format Check
@@ -70,4 +70,4 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@c5a866b6ab867e88becbed4467b93592bce69f8a # v21
 
       - name: Check format
-        run: nix develop -c treefmt --fail-on-change
+        run: nix develop .#ci-format -c treefmt --fail-on-change
