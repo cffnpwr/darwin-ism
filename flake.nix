@@ -33,51 +33,76 @@
           packages.default = import ./nix/darwin-ism/package.nix { pkgs = pkgs'; };
 
           # Development shell
-          devShells.default = pkgs'.mkShell {
-            buildInputs = [ pkgs'.apple-sdk_15 ];
+          devShells = {
+            default = pkgs'.mkShell {
+              buildInputs = [ pkgs'.apple-sdk_15 ];
 
-            packages = with pkgs'; [
-              git
-              lefthook
-              nil
-              nixd
-              nixfmt
-              swift_6
-              swiftformat
-              swiftlint
-              swiftpm2nix
-              treefmt
-              xcbuild
-            ];
+              packages = with pkgs'; [
+                git
+                lefthook
+                nil
+                nixd
+                nixfmt
+                swift_6
+                swiftformat
+                swiftlint
+                swiftpm2nix
+                treefmt
+                xcbuild
+              ];
 
-            shellHook = ''
-              lefthook install
+              shellHook = ''
+                lefthook install
 
-              # Only exec into user shell for interactive sessions
-              # Skip for non-interactive commands (like VSCode env detection)
-              if [ -t 0 ] && [ -z "$__NIX_SHELL_EXEC" ]; then
-                export __NIX_SHELL_EXEC=1
+                # Only exec into user shell for interactive sessions
+                # Skip for non-interactive commands (like VSCode env detection)
+                if [ -t 0 ] && [ -z "$__NIX_SHELL_EXEC" ]; then
+                  export __NIX_SHELL_EXEC=1
 
-                # Detect user's login shell (works on both macOS and Linux)
-                if command -v dscl >/dev/null 2>&1; then
-                  # macOS
-                  USER_SHELL=$(dscl . -read ~/ UserShell | sed 's/UserShell: //')
-                elif command -v getent >/dev/null 2>&1; then
-                  # Linux
-                  USER_SHELL=$(getent passwd $USER | cut -d: -f7)
-                else
-                  # Fallback: read /etc/passwd directly
-                  USER_SHELL=$(grep "^$USER:" /etc/passwd | cut -d: -f7)
+                  # Detect user's login shell (works on both macOS and Linux)
+                  if command -v dscl >/dev/null 2>&1; then
+                    # macOS
+                    USER_SHELL=$(dscl . -read ~/ UserShell | sed 's/UserShell: //')
+                  elif command -v getent >/dev/null 2>&1; then
+                    # Linux
+                    USER_SHELL=$(getent passwd $USER | cut -d: -f7)
+                  else
+                    # Fallback: read /etc/passwd directly
+                    USER_SHELL=$(grep "^$USER:" /etc/passwd | cut -d: -f7)
+                  fi
+
+                  exec ''${USER_SHELL:-$SHELL}
                 fi
+              '';
 
-                exec ''${USER_SHELL:-$SHELL}
-              fi
-            '';
+              # Required for SwiftLint to find SourceKit framework
+              DYLD_FRAMEWORK_PATH = "${pkgs'.swift_6}/lib";
+              # Backup for DYLD_FRAMEWORK_PATH (preserved after exec to user shell)
+              __NIX_SWIFT_LIB = "${pkgs'.swift_6}/lib";
+            };
 
-            # Required for SwiftLint to find SourceKit framework
-            DYLD_FRAMEWORK_PATH = "${pkgs'.swift_6}/lib";
-            # Backup for DYLD_FRAMEWORK_PATH (preserved after exec to user shell)
-            __NIX_SWIFT_LIB = "${pkgs'.swift_6}/lib";
+            ci-format = pkgs'.mkShell {
+              buildInputs = [ pkgs'.apple-sdk_15 ];
+
+              packages = with pkgs'; [
+                nixfmt
+                swift_6
+                swiftformat
+                treefmt
+              ];
+            };
+
+            ci-lint = pkgs'.mkShell {
+              buildInputs = [ pkgs'.apple-sdk_15 ];
+
+              packages = with pkgs'; [
+                swift_6
+                swiftlint
+              ];
+
+              # Required for SwiftLint to find SourceKit framework
+              DYLD_FRAMEWORK_PATH = "${pkgs'.swift_6}/lib";
+            };
           };
         };
     };
