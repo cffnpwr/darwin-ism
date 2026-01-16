@@ -22,6 +22,7 @@
               swift_6 = import ./nix/swift.nix { pkgs = final; };
               swiftlint = import ./nix/swiftlint.nix { pkgs = prev; };
               swiftformat = import ./nix/swiftformat.nix { pkgs = prev; };
+              swiftpm2nix = import ./nix/swiftpm2nix.nix { pkgs = prev; };
             }
           );
         in
@@ -29,7 +30,7 @@
           formatter = pkgs'.treefmt;
 
           # Package build for nix build
-          packages.default = import ./nix/darwin-ism.nix { pkgs = pkgs'; };
+          packages.default = import ./nix/darwin-ism/package.nix { pkgs = pkgs'; };
 
           # Development shell
           devShells.default = pkgs'.mkShell {
@@ -44,7 +45,9 @@
               swift_6
               swiftformat
               swiftlint
+              swiftpm2nix
               treefmt
+              xcbuild
             ];
 
             shellHook = ''

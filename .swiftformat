@@ -3,8 +3,8 @@
 # Indentation
 --indent 2
 
-# Trailing commas only for multiline
---commas inline
+# Trailing commas for multiline
+--commas always
 
 # Exclude paths
 --exclude .build

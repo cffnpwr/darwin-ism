@@ -3,29 +3,30 @@
   ...
 }:
 let
-  arch = if pkgs.stdenv.hostPlatform.system == "aarch64-darwin" then "arm64" else "x86_64";
-  target = "${arch}-apple-macos15";
+  generated = pkgs.swiftpm2nix.helpers ./nix;
 in
 pkgs.stdenv.mkDerivation {
   pname = "darwin-ism";
   version = "0.1.0";
 
-  src = ../.;
+  src = ../../.;
 
   nativeBuildInputs = [ pkgs.swift_6 ];
   buildInputs = [ pkgs.apple-sdk_15 ];
 
+  # SwiftPM requires less restrictive sandbox on macOS
+  __noChroot = pkgs.stdenv.isDarwin;
+
+  configurePhase = generated.configure;
+
   buildPhase = ''
-    swiftc -O -o darwin-ism \
-      -target ${target} \
-      -framework Carbon \
-      -framework Foundation \
-      Sources/darwin-ism/*.swift
+    # Disable SwiftPM's sandbox to avoid conflicts with Nix sandbox
+    swift build -c release --disable-sandbox
   '';
 
   installPhase = ''
     mkdir -p $out/bin
-    cp darwin-ism $out/bin/
+    cp .build/release/darwin-ism $out/bin/
   '';
 
   meta = with pkgs.lib; {
