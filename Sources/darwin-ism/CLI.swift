@@ -47,7 +47,7 @@ struct DarwinISM: ParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "darwin-ism",
     abstract: "macOS Input Source Manager CLI",
-    version: "0.1.0",
+    version: "0.1.0", // x-release-please-version
     subcommands: [ListSources.self, Enable.self, Disable.self],
   )
 }

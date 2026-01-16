@@ -1,0 +1,110 @@
+name: Publish
+on:
+  release:
+    types:
+      - created
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  build:
+    name: Build (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: amd64
+            runner: macos-15-intel
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@c5a866b6ab867e88becbed4467b93592bce69f8a # v21
+
+      - name: Build
+        run: nix build
+
+      - name: Package binary
+        run: |
+          mkdir -p dist
+          cp result/bin/darwin-ism dist/darwin-ism-${{ matrix.arch }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: darwin-ism-${{ matrix.arch }}
+          path: dist/darwin-ism-${{ matrix.arch }}
+
+  create-universal:
+    name: Create Universal Binary
+    runs-on: macos-15
+    timeout-minutes: 10
+    needs: build
+    steps:
+      - name: Download arm64 artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: darwin-ism-arm64
+          path: artifacts/arm64
+
+      - name: Download amd64 artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: darwin-ism-amd64
+          path: artifacts/amd64
+
+      - name: Create universal binary
+        run: |
+          mkdir -p dist
+          lipo -create \
+            artifacts/arm64/darwin-ism-arm64 \
+            artifacts/amd64/darwin-ism-amd64 \
+            -output dist/darwin-ism-universal
+
+      - name: Upload universal artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: darwin-ism-universal
+          path: dist/darwin-ism-universal
+
+  upload-release:
+    name: Upload Release Assets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs: create-universal
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          path: artifacts
+          pattern: darwin-ism-*
+          merge-multiple: false
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            artifacts/darwin-ism-arm64/darwin-ism-arm64 \
+            artifacts/darwin-ism-amd64/darwin-ism-amd64 \
+            artifacts/darwin-ism-universal/darwin-ism-universal
+
+      - name: Publish release (remove draft)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release edit "${{ github.event.release.tag_name }}" --draft=false
