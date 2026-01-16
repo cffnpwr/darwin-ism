@@ -20,6 +20,10 @@ pkgs.stdenv.mkDerivation {
   configurePhase = generated.configure;
 
   buildPhase = ''
+    # Set library path for Swift runtime (needed for x86_64-darwin where
+    # system Swift runtime resolution via dyld may fail)
+    export DYLD_LIBRARY_PATH="${pkgs.swift_6}/lib/swift/macosx''${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+
     # Disable SwiftPM's sandbox to avoid conflicts with Nix sandbox
     swift build -c release --disable-sandbox
   '';
