@@ -14,4 +14,4 @@ pre-commit:
 
     lint:
       glob: "*.swift"
-      run: DYLD_FRAMEWORK_PATH="${__NIX_SWIFT_LIB:-$DYLD_FRAMEWORK_PATH}" swiftlint lint --config .swiftlint.yaml --strict {staged_files}
+      run: swiftlint lint --config .swiftlint.yaml --strict {staged_files}
