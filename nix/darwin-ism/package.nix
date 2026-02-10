@@ -3,7 +3,7 @@
   ...
 }:
 let
-  generated = pkgs.swiftpm2nix.helpers ./nix;
+  generated = pkgs.swiftpm2nix.helpers ./generated;
 in
 pkgs.stdenv.mkDerivation {
   pname = "darwin-ism";
@@ -11,8 +11,11 @@ pkgs.stdenv.mkDerivation {
 
   src = ../../.;
 
-  nativeBuildInputs = [ pkgs.swift_6 ];
-  buildInputs = [ pkgs.apple-sdk_15 ];
+  nativeBuildInputs = with pkgs; [
+    apple-sdk_14
+    swift
+    swiftPackages.swiftpm
+  ];
 
   # SwiftPM requires less restrictive sandbox on macOS
   __noChroot = pkgs.stdenv.isDarwin;
@@ -20,11 +23,6 @@ pkgs.stdenv.mkDerivation {
   configurePhase = generated.configure;
 
   buildPhase = ''
-    # Set library path for Swift runtime (needed for x86_64-darwin where
-    # system Swift runtime resolution via dyld may fail)
-    export DYLD_LIBRARY_PATH="${pkgs.swift_6}/lib/swift/macosx''${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
-
-    # Disable SwiftPM's sandbox to avoid conflicts with Nix sandbox
     swift build -c release --disable-sandbox
   '';
 
