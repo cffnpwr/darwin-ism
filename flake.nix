@@ -7,7 +7,7 @@
   };
 
   outputs =
-    inputs@{ flake-parts, ... }:
+    inputs@{ nixpkgs, flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "x86_64-darwin"
@@ -16,36 +16,37 @@
 
       perSystem =
         { pkgs, system, ... }:
-        let
-          pkgs' = pkgs.extend (
-            final: prev: {
-              swift_6 = import ./nix/swift.nix { pkgs = final; };
-              swiftlint = import ./nix/swiftlint.nix { pkgs = prev; };
-              swiftformat = import ./nix/swiftformat.nix { pkgs = prev; };
-              swiftpm2nix = import ./nix/swiftpm2nix.nix { pkgs = prev; };
-            }
-          );
-        in
         {
-          formatter = pkgs'.treefmt;
+          _module.args.pkgs = import nixpkgs {
+            inherit system;
+            overlays = [
+              (final: prev: {
+                swiftlint = import ./nix/swiftlint.nix { pkgs = prev; };
+                swiftformat = import ./nix/swiftformat.nix { pkgs = prev; };
+              })
+            ];
+          };
+          formatter = pkgs.treefmt;
 
           # Package build for nix build
-          packages.default = import ./nix/darwin-ism/package.nix { pkgs = pkgs'; };
+          packages = {
+            default = import ./nix/darwin-ism/package.nix { inherit pkgs; };
+          };
 
           # Development shell
           devShells = {
-            default = pkgs'.mkShell {
-              buildInputs = [ pkgs'.apple-sdk_15 ];
-
-              packages = with pkgs'; [
+            default = pkgs.mkShell {
+              packages = with pkgs; [
+                apple-sdk_14
                 git
                 lefthook
                 nil
                 nixd
                 nixfmt
-                swift_6
+                swift
                 swiftformat
                 swiftlint
+                swiftPackages.swiftpm
                 swiftpm2nix
                 treefmt
                 xcbuild
@@ -71,37 +72,50 @@
                     USER_SHELL=$(grep "^$USER:" /etc/passwd | cut -d: -f7)
                   fi
 
+                  # Required for SwiftLint to find SourceKit framework
+                  export DYLD_FRAMEWORK_PATH="${pkgs.swift}/lib"
                   exec ''${USER_SHELL:-$SHELL}
                 fi
               '';
 
-              # Required for SwiftLint to find SourceKit framework
-              DYLD_FRAMEWORK_PATH = "${pkgs'.swift_6}/lib";
-              # Backup for DYLD_FRAMEWORK_PATH (preserved after exec to user shell)
-              __NIX_SWIFT_LIB = "${pkgs'.swift_6}/lib";
+              # Minimum macOS deployment target
+              MACOSX_DEPLOYMENT_TARGET = "14.0";
+            };
+          };
+
+          apps = {
+            format = {
+              type = "app";
+              program = "${
+                pkgs.writeShellApplication {
+                  name = "format";
+                  runtimeInputs = with pkgs; [
+                    nixfmt
+                    swiftformat
+                    treefmt
+                  ];
+                  text = "treefmt \"$@\"";
+                }
+              }/bin/format";
             };
 
-            ci-format = pkgs'.mkShell {
-              buildInputs = [ pkgs'.apple-sdk_15 ];
-
-              packages = with pkgs'; [
-                nixfmt
-                swift_6
-                swiftformat
-                treefmt
-              ];
-            };
-
-            ci-lint = pkgs'.mkShell {
-              buildInputs = [ pkgs'.apple-sdk_15 ];
-
-              packages = with pkgs'; [
-                swift_6
-                swiftlint
-              ];
-
-              # Required for SwiftLint to find SourceKit framework
-              DYLD_FRAMEWORK_PATH = "${pkgs'.swift_6}/lib";
+            lint = {
+              type = "app";
+              program = "${
+                pkgs.writeShellApplication {
+                  name = "lint";
+                  runtimeInputs = with pkgs; [
+                    apple-sdk_14
+                    swift
+                    swiftlint
+                  ];
+                  text = ''
+                    # Required for SwiftLint to find SourceKit framework
+                    export DYLD_FRAMEWORK_PATH="${pkgs.swift}/lib";
+                    swiftlint lint "$@"
+                  '';
+                }
+              }/bin/lint";
             };
           };
         };

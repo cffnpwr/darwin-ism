@@ -50,7 +50,7 @@ struct DarwinISM: ParsableCommand {
     // x-release-please-start-version
     version: "0.1.0",
     // x-release-please-end
-    subcommands: [ListSources.self, Enable.self, Disable.self],
+    subcommands: [ListSources.self, Enable.self, Disable.self]
   )
 }
 
@@ -58,7 +58,7 @@ extension DarwinISM {
   struct ListSources: ParsableCommand {
     static let configuration = CommandConfiguration(
       commandName: "list",
-      abstract: "List all input sources",
+      abstract: "List all input sources"
     )
 
     @Flag(name: [.customShort("e"), .long], help: "Show enabled input sources only")
@@ -96,7 +96,7 @@ extension DarwinISM {
 
   struct Enable: ParsableCommand {
     static let configuration = CommandConfiguration(
-      abstract: "Enable an input source",
+      abstract: "Enable an input source"
     )
 
     @Argument(help: "Input source ID to enable")
@@ -130,7 +130,7 @@ extension DarwinISM {
 
   struct Disable: ParsableCommand {
     static let configuration = CommandConfiguration(
-      abstract: "Disable an input source",
+      abstract: "Disable an input source"
     )
 
     private static let kotoeriRomajiID = "com.apple.inputmethod.Kotoeri.RomajiTyping"
