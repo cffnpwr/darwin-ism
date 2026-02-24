@@ -10,7 +10,7 @@
       "extra-files": [
         {
           "type": "generic",
-          "path": "Sources/darwin-ism/cli.swift"
+          "path": "Sources/darwin-ism/CLI.swift"
         }
       ]
     }
