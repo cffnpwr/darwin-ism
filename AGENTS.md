@@ -16,8 +16,10 @@ darwin-ism is a macOS CLI tool for managing input sources (keyboard layouts, inp
 
 ## Quick Start
 
+All commands below require the Nix dev shell. Run `nix develop` first, or use `nix develop --command <cmd>` to run a single command non-interactively.
+
 ```bash
-# Enter dev shell (Nix)
+# Enter dev shell (Nix) — required before all other commands
 nix develop
 
 # Build

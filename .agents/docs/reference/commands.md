@@ -2,6 +2,9 @@
 
 ## Development Environment
 
+All commands below (`swift`, `swiftlint`, `treefmt`, etc.) must be run inside the Nix dev shell.
+Enter it first with `nix develop`, or prefix any command with `nix develop --command <cmd>`.
+
 | Command | Description |
 |---------|-------------|
 | `nix develop` | Enter dev shell with all tools (runs lefthook install) |

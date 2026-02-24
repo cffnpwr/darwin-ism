@@ -1,5 +1,17 @@
 # Critical Rules
 
+## Development Environment
+
+All build, lint, and format commands require the Nix dev shell. Run `nix develop` before any other command. Without it, `swift`, `swiftlint`, `treefmt`, and other tools will not be available.
+
+To run a single command without entering the shell interactively:
+
+```bash
+nix develop --command swift build
+nix develop --command swiftlint lint --config .swiftlint.yaml --strict
+nix develop --command treefmt --fail-on-change
+```
+
 ## Build and Quality Gates
 
 All of the following must pass before committing:
