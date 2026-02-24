@@ -50,6 +50,7 @@
                 swiftpm2nix
                 treefmt
                 xcbuild
+                yamlfmt
               ];
 
               shellHook = ''
@@ -93,6 +94,7 @@
                     nixfmt
                     swiftformat
                     treefmt
+                    yamlfmt
                   ];
                   text = "treefmt \"$@\"";
                 }

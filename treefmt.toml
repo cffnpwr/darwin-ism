@@ -8,3 +8,7 @@ includes = ["*.nix"]
 [formatter.swift]
 command = "swiftformat"
 includes = ["*.swift"]
+
+[formatter.yaml]
+command = "yamlfmt"
+includes = ["*.yaml", "*.yml"]
