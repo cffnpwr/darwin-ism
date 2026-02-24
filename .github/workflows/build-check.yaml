@@ -1,0 +1,74 @@
+name: Build check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow_ref }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  detect-changes:
+    name: Detect changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      should-build: ${{ steps.filter.outputs.build }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Detect relevant changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            build:
+              - "**/*.swift"
+              - "**/*.nix"
+              - "**/flake.nix"
+              - "**/flake.lock"
+              - "**/Package.swift"
+              - "**/Package.resolved"
+
+  build:
+    name: Build (${{ matrix.system }})
+    # DeterminateNix does not support x86_64-darwin natively.
+    # Use aarch64-darwin runner with Rosetta 2 to build for x86_64-darwin.
+    runs-on: macos-15
+    needs: detect-changes
+    if: >-
+      needs.detect-changes.outputs.should-build == 'true' ||
+      contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        system:
+          - aarch64-darwin
+          - x86_64-darwin
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install Nix
+        uses: DeterminateSystems/determinate-nix-action@f9ebef276016dd519d188ee7b71879732418f8b9 # v3.16.0
+
+      - name: Build
+        run: nix build --print-build-logs --system ${{ matrix.system }}
