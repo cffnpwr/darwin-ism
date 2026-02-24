@@ -31,8 +31,11 @@ private func padToWidth(_ str: String, _ targetWidth: Int) -> String {
 }
 
 /// Format a row with display-width-aware padding
-private func formatRow(_ col1: String, _ col2: String, _ col3: String, _ col4: String) -> String {
-  padToWidth(col1, 50) + padToWidth(col2, 8) + padToWidth(col3, 30) + col4
+private func formatRow(
+  _ col1: String, _ col2: String, _ col3: String, _ col4: String,
+  widths: (Int, Int, Int)
+) -> String {
+  padToWidth(col1, widths.0) + padToWidth(col2, widths.1) + padToWidth(col3, widths.2) + col4
 }
 
 enum AppExitCode: Int32 {
@@ -81,13 +84,23 @@ extension DarwinISM {
         return
       }
 
-      print(formatRow("ID", "Enabled", "Type", "Name"))
-      print(String(repeating: "-", count: 110))
-
-      for source in sources {
+      let rows: [(String, String, String, String)] = sources.map { source in
         let enabledStr = source.isEnabled ? "true" : "false"
         let typeName = source.type.replacingOccurrences(of: "TISType", with: "")
-        print(formatRow(source.id, enabledStr, typeName, source.localizedName))
+        return (source.id, enabledStr, typeName, source.localizedName)
+      }
+
+      let col1Width = max(displayWidth("ID"), rows.map { displayWidth($0.0) }.max() ?? 0) + 2
+      let col2Width = max(displayWidth("Enabled"), rows.map { displayWidth($0.1) }.max() ?? 0) + 2
+      let col3Width = max(displayWidth("Type"), rows.map { displayWidth($0.2) }.max() ?? 0) + 2
+      let widths = (col1Width, col2Width, col3Width)
+
+      let totalWidth = col1Width + col2Width + col3Width + 20
+      print(formatRow("ID", "Enabled", "Type", "Name", widths: widths))
+      print(String(repeating: "-", count: totalWidth))
+
+      for (id, enabledStr, typeName, name) in rows {
+        print(formatRow(id, enabledStr, typeName, name, widths: widths))
       }
 
       print("\nTotal: \(sources.count) input source(s)")
