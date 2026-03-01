@@ -34,4 +34,4 @@ jobs:
         uses: DeterminateSystems/determinate-nix-action@f9ebef276016dd519d188ee7b71879732418f8b9 # v3.16.0
 
       - name: Run SwiftLint
-        run: nix run .#lint -- --config .swiftlint.yaml --strict
+        run: nix run .#lint
