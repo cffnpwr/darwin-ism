@@ -1,5 +1,5 @@
 [tools]
-"aqua:numtide/treefmt" = "v2.4.0"
+"aqua:numtide/treefmt" = "v2.4.1"
 "asdf:swiftformat" = "0.58.7"
 lefthook = "2.1.1"
 swift = "5.10.1"
