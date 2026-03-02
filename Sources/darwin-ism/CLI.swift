@@ -36,6 +36,13 @@ private struct ColumnWidths {
   let col3: Int
 }
 
+private struct SourceRow {
+  let id: String
+  let enabled: String
+  let type: String
+  let name: String
+}
+
 /// Format a row with display-width-aware padding
 private func formatRow(
   _ col1: String, _ col2: String, _ col3: String, _ col4: String,
@@ -89,13 +96,6 @@ extension DarwinISM {
       if sources.isEmpty {
         print("No input sources found.")
         return
-      }
-
-      struct SourceRow {
-        let id: String
-        let enabled: String
-        let type: String
-        let name: String
       }
 
       let rows: [SourceRow] = sources.map { source in

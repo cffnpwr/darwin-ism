@@ -1,13 +1,29 @@
 {
   description = "macOS Input Source Manager CLI";
 
+  nixConfig = {
+    extra-substituters = [ "https://nix-cache.cffnpwr.dev" ];
+    extra-trusted-public-keys = [
+      "cffnpwr-nixpkgs-extras:dmp2DUGwdqawLCPOsOcRxU/NpCO/qA1jha/8rmoSzvA="
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    nixpkgs-extras = {
+      url = "github:cffnpwr/nixpkgs-extras";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    inputs@{ nixpkgs, flake-parts, ... }:
+    inputs@{
+      nixpkgs,
+      flake-parts,
+      nixpkgs-extras,
+      ...
+    }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "x86_64-darwin"
@@ -20,6 +36,7 @@
           _module.args.pkgs = import nixpkgs {
             inherit system;
             overlays = [
+              nixpkgs-extras.overlays.default
               (final: prev: {
                 swiftlint = import ./nix/swiftlint.nix { pkgs = prev; };
                 swiftformat = import ./nix/swiftformat.nix { pkgs = prev; };
@@ -56,6 +73,9 @@
               shellHook = ''
                 lefthook install
 
+                # Required for SwiftLint to find SourceKit framework
+                export DYLD_FRAMEWORK_PATH="${pkgs.swiftPackages.sourcekitd-inproc}/lib"
+
                 # Only exec into user shell for interactive sessions
                 # Skip for non-interactive commands (like VSCode env detection)
                 if [ -t 0 ] && [ -z "$__NIX_SHELL_EXEC" ]; then
@@ -73,8 +93,6 @@
                     USER_SHELL=$(grep "^$USER:" /etc/passwd | cut -d: -f7)
                   fi
 
-                  # Required for SwiftLint to find SourceKit framework
-                  export DYLD_FRAMEWORK_PATH="${pkgs.swift}/lib"
                   exec ''${USER_SHELL:-$SHELL}
                 fi
               '';
@@ -108,13 +126,14 @@
                   name = "lint";
                   runtimeInputs = with pkgs; [
                     apple-sdk_14
-                    swift
                     swiftlint
                   ];
                   text = ''
                     # Required for SwiftLint to find SourceKit framework
-                    export DYLD_FRAMEWORK_PATH="${pkgs.swift}/lib";
-                    swiftlint lint "$@"
+                    export DYLD_FRAMEWORK_PATH="${pkgs.swiftPackages.sourcekitd-inproc}/lib"
+                    # Required to suppress xcode-select invocation by sourcekitdInProc
+                    export DEVELOPER_DIR="${pkgs.apple-sdk_14}"
+                    swiftlint lint --config .swiftlint.yaml --strict "$@"
                   '';
                 }
               }/bin/lint";
