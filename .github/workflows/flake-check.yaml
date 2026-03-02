@@ -20,7 +20,7 @@ permissions: {}
 
 jobs:
   flake-check:
-    uses: cffnpwr/actions/.github/workflows/flake-check.yaml@785bcf9d402ea309da061a71cf4c3b8cfc34069a
+    uses: cffnpwr/actions/.github/workflows/flake-check.yaml@7a8b4bff48da8f2ed40739fcc8d500aff381d060
     with:
       runner: macos-15
     permissions:
