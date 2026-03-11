@@ -2,5 +2,14 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>cffnpwr/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["mise"],
+      "matchDepNames": ["swift"],
+      "overrideDatasource": "github-releases",
+      "overridePackageName": "swiftlang/swift",
+      "extractVersion": "^swift-(?<version>.+)-RELEASE$"
+    }
   ]
 }

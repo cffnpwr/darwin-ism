@@ -8,3 +8,6 @@ result-*
 *.xcodeproj/
 *.xcworkspace/
 .build/
+
+# Ignore direnv directory
+.direnv/
