@@ -5,7 +5,7 @@ let package = Package(
   name: "darwin-ism",
   platforms: [.macOS(.v14)],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-argument-parser.git", exact: "1.6.2"),
+    .package(url: "https://github.com/apple/swift-argument-parser.git", exact: "1.7.0"),
   ],
   targets: [
     .executableTarget(
