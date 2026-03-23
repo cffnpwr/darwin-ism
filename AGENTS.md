@@ -1,4 +1,4 @@
-# CLAUDE.md - darwin-ism
+# AGENTS.md - darwin-ism
 
 ## Project Summary
 
@@ -43,6 +43,7 @@ treefmt
 ## Task Navigation
 
 ### Adding or Modifying CLI Commands
+
 **Task**: Add new subcommands, flags, or options to the CLI
 
 → Read: `.agents/docs/reference/architecture.md`
@@ -50,6 +51,7 @@ treefmt
 Subcommands are defined in `Sources/darwin-ism/CLI.swift` using swift-argument-parser. Follow existing patterns (`ListSources`, `Enable`, `Disable`).
 
 ### Working with Input Sources
+
 **Task**: Modify how input sources are queried, enabled, or disabled
 
 → Read: `.agents/docs/reference/architecture.md`
@@ -57,6 +59,7 @@ Subcommands are defined in `Sources/darwin-ism/CLI.swift` using swift-argument-p
 Core types: `InputSource` (wrapper around `TISInputSource`) and `InputSourceManager` (static query methods).
 
 ### Nix Build Configuration
+
 **Task**: Modify build settings, dependencies, or dev shell
 
 → Key files: `flake.nix`, `nix/darwin-ism/package.nix`
@@ -64,11 +67,13 @@ Core types: `InputSource` (wrapper around `TISInputSource`) and `InputSourceMana
 After changing Swift dependencies, regenerate with swiftpm2nix.
 
 ### Release and Versioning
+
 **Task**: Understand or modify the release process
 
 → Read: `.agents/docs/workflows/release.md`
 
 ### CI/CD
+
 **Task**: Modify GitHub Actions workflows
 
 → Workflows in `.github/workflows/`: `ci.yaml` (build/lint/format), `publish.yaml` (release artifacts), `release-please.yaml` (versioning), `check-status.yaml` (PR monitoring).
@@ -86,18 +91,19 @@ scripts/                      # Dev scripts (version checks)
 
 ## Development Tools
 
-| Tool | Role | Config |
-|------|------|--------|
-| SwiftLint | Linting (strict) | `.swiftlint.yaml` |
-| SwiftFormat | Swift formatting | `.swiftformat` |
-| treefmt | Multi-formatter | `treefmt.toml` |
-| lefthook | Pre-commit hooks | `lefthook.yaml` |
-| mise | Tool version manager | `mise.toml` |
-| release-please | Automated releases | `.github/release-please/` |
+| Tool           | Role                 | Config                    |
+| -------------- | -------------------- | ------------------------- |
+| SwiftLint      | Linting (strict)     | `.swiftlint.yaml`         |
+| SwiftFormat    | Swift formatting     | `.swiftformat`            |
+| treefmt        | Multi-formatter      | `treefmt.toml`            |
+| lefthook       | Pre-commit hooks     | `lefthook.yaml`           |
+| mise           | Tool version manager | `mise.toml`               |
+| release-please | Automated releases   | `.github/release-please/` |
 
 ## Commit Convention
 
 Conventional commits with gitmoji. Examples from this project:
+
 - `feat: :sparkles: description` — new feature
 - `fix: :bug: description` — bug fix
 - `ci: :green_heart: description` — CI changes

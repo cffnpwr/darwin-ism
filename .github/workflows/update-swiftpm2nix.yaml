@@ -59,6 +59,7 @@ jobs:
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
           USER_ID: ${{ steps.get-user-id.outputs.user-id }}
         run: |-
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git fetch --depth=1 origin "$GITHUB_HEAD_REF"
           git checkout -B "$GITHUB_HEAD_REF" "${{ github.event.pull_request.head.sha }}"
 
@@ -71,7 +72,5 @@ jobs:
             git config user.email "${USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
             git add nix/darwin-ism/generated/
             git commit -m "fix(nix): :package: update swiftpm2nix generated files"
-            git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git push origin "$GITHUB_HEAD_REF"
-            git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
           fi
