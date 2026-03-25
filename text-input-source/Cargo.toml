@@ -1,4 +1,13 @@
 [package]
 name = "text-input-source"
 version = "0.1.0"
-edition = "2024"
+edition = { workspace = true }
+license = { workspace = true }
+readme = "README.md"
+homepage = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+core-foundation = "0.10.1"
+core-foundation-sys = "0.8.7"
+thiserror = { workspace = true }

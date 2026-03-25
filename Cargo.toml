@@ -3,5 +3,13 @@
 resolver = "3"
 members = ["lib", "cli", "text-input-source"]
 
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/cffnpwr/darwin-ism"
+repository = "https://github.com/cffnpwr/darwin-ism"
+
 [workspace.dependencies]
 thiserror = "2.0.18"
