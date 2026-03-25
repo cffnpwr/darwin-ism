@@ -11,6 +11,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixpkgs-extras = {
       url = "github:cffnpwr/nixpkgs-extras";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -21,6 +25,7 @@
     inputs@{
       nixpkgs,
       flake-parts,
+      fenix,
       nixpkgs-extras,
       ...
     }:
@@ -31,50 +36,52 @@
       ];
 
       perSystem =
-        { pkgs, system, ... }:
+        {
+          pkgs,
+          system,
+          ...
+        }:
+        let
+          miseConfig = fromTOML (builtins.readFile ./mise.toml);
+
+          lefthookVersion = miseConfig.tools.lefthook;
+          treefmtVersion = miseConfig.tools."aqua:numtide/treefmt";
+          yamlfmtVersion = miseConfig.tools.yamlfmt;
+
+          toolchain = fenix.packages.${system}.fromToolchainFile {
+            file = ./rust-toolchain.toml;
+            sha256 = "sha256-yBBVTXwFIHKxSHyj5HoxSLVKZILjd9kbedlMeAre2F8=";
+          };
+        in
         {
           _module.args.pkgs = import nixpkgs {
             inherit system;
             overlays = [
               nixpkgs-extras.overlays.default
-              (final: prev: {
-                swiftlint = import ./nix/swiftlint.nix { pkgs = prev; };
-                swiftformat = import ./nix/swiftformat.nix { pkgs = prev; };
-              })
             ];
           };
-          formatter = pkgs.treefmt;
-
-          # Package build for nix build
-          packages = {
-            default = import ./nix/darwin-ism/package.nix { inherit pkgs; };
-          };
+          formatter = pkgs.treefmt.versions."${treefmtVersion}";
 
           # Development shell
           devShells = {
             default = pkgs.mkShell {
               packages = with pkgs; [
-                apple-sdk_14
+                # Development tools
                 git
-                lefthook
-                nil
+                lefthook.versions."${lefthookVersion}"
+
+                # Linter/Formatter
                 nixd
                 nixfmt
-                swift
-                swiftformat
-                swiftlint
-                swiftPackages.swiftpm
-                swiftpm2nix
-                treefmt
-                xcbuild
-                yamlfmt
+                treefmt.versions."${treefmtVersion}"
+                yamlfmt.versions."${yamlfmtVersion}"
+
+                # Rust toolchain
+                toolchain
               ];
 
               shellHook = ''
                 lefthook install
-
-                # Required for SwiftLint to find SourceKit framework
-                export DYLD_FRAMEWORK_PATH="${pkgs.swiftPackages.sourcekitd-inproc}/lib"
 
                 # Only exec into user shell for interactive sessions
                 # Skip for non-interactive commands (like VSCode env detection)
@@ -96,47 +103,6 @@
                   exec ''${USER_SHELL:-$SHELL}
                 fi
               '';
-
-              # Minimum macOS deployment target
-              MACOSX_DEPLOYMENT_TARGET = "14.0";
-            };
-          };
-
-          apps = {
-            format = {
-              type = "app";
-              program = "${
-                pkgs.writeShellApplication {
-                  name = "format";
-                  runtimeInputs = with pkgs; [
-                    nixfmt
-                    swiftformat
-                    treefmt
-                    yamlfmt
-                  ];
-                  text = "treefmt \"$@\"";
-                }
-              }/bin/format";
-            };
-
-            lint = {
-              type = "app";
-              program = "${
-                pkgs.writeShellApplication {
-                  name = "lint";
-                  runtimeInputs = with pkgs; [
-                    apple-sdk_14
-                    swiftlint
-                  ];
-                  text = ''
-                    # Required for SwiftLint to find SourceKit framework
-                    export DYLD_FRAMEWORK_PATH="${pkgs.swiftPackages.sourcekitd-inproc}/lib"
-                    # Required to suppress xcode-select invocation by sourcekitdInProc
-                    export DEVELOPER_DIR="${pkgs.apple-sdk_14}"
-                    swiftlint lint --config .swiftlint.yaml --strict "$@"
-                  '';
-                }
-              }/bin/lint";
             };
           };
         };
