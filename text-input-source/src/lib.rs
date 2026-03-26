@@ -124,21 +124,31 @@ impl Display for OperationKind {
 pub enum PropertyKind {
     InputSourceCategory,
     IsEnabled,
+    IsEnableCapable,
     InputSourceId,
+    BundleId,
+    InputSourceType,
     LocalizedName,
 }
 
 impl PropertyKind {
     const K_TIS_PROPERTY_INPUT_SOURCE_CATEGORY_NAME: &str = "kTISPropertyInputSourceCategory";
     const K_TIS_PROPERTY_INPUT_SOURCE_IS_ENABLED_NAME: &str = "kTISPropertyInputSourceIsEnabled";
+    const K_TIS_PROPERTY_INPUT_SOURCE_IS_ENABLE_CAPABLE_NAME: &str =
+        "kTISPropertyInputSourceIsEnableCapable";
     const K_TIS_PROPERTY_INPUT_SOURCE_ID_NAME: &str = "kTISPropertyInputSourceID";
+    const K_TIS_PROPERTY_BUNDLE_ID_NAME: &str = "kTISPropertyBundleID";
+    const K_TIS_PROPERTY_INPUT_SOURCE_TYPE_NAME: &str = "kTISPropertyInputSourceType";
     const K_TIS_PROPERTY_LOCALIZED_NAME_NAME: &str = "kTISPropertyLocalizedName";
 
     fn key(self) -> CFStringRef {
         match self {
             Self::InputSourceCategory => unsafe { ffi::kTISPropertyInputSourceCategory },
             Self::IsEnabled => unsafe { ffi::kTISPropertyInputSourceIsEnabled },
+            Self::IsEnableCapable => unsafe { ffi::kTISPropertyInputSourceIsEnableCapable },
             Self::InputSourceId => unsafe { ffi::kTISPropertyInputSourceID },
+            Self::BundleId => unsafe { ffi::kTISPropertyBundleID },
+            Self::InputSourceType => unsafe { ffi::kTISPropertyInputSourceType },
             Self::LocalizedName => unsafe { ffi::kTISPropertyLocalizedName },
         }
     }
@@ -147,7 +157,10 @@ impl PropertyKind {
         match self {
             Self::InputSourceCategory => Self::K_TIS_PROPERTY_INPUT_SOURCE_CATEGORY_NAME,
             Self::IsEnabled => Self::K_TIS_PROPERTY_INPUT_SOURCE_IS_ENABLED_NAME,
+            Self::IsEnableCapable => Self::K_TIS_PROPERTY_INPUT_SOURCE_IS_ENABLE_CAPABLE_NAME,
             Self::InputSourceId => Self::K_TIS_PROPERTY_INPUT_SOURCE_ID_NAME,
+            Self::BundleId => Self::K_TIS_PROPERTY_BUNDLE_ID_NAME,
+            Self::InputSourceType => Self::K_TIS_PROPERTY_INPUT_SOURCE_TYPE_NAME,
             Self::LocalizedName => Self::K_TIS_PROPERTY_LOCALIZED_NAME_NAME,
         }
     }

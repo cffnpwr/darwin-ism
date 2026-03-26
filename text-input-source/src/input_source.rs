@@ -49,6 +49,24 @@ impl InputSource {
         self.get_string_property(PropertyKind::InputSourceId)
     }
 
+    /// Returns the bundle identifier, if available.
+    pub fn bundle_id(&self) -> Result<Option<String>> {
+        self.get_string_property(PropertyKind::BundleId)
+    }
+
+    /// Returns the input source type string, if available.
+    ///
+    /// The returned value is a raw string such as `"TISTypeKeyboardLayout"` or
+    /// `"TISTypeKeyboardInputMethod"`.
+    pub fn input_source_type(&self) -> Result<Option<String>> {
+        self.get_string_property(PropertyKind::InputSourceType)
+    }
+
+    /// Returns whether this input source can be enabled.
+    pub fn is_enable_capable(&self) -> Result<bool> {
+        self.get_required_bool_property(PropertyKind::IsEnableCapable)
+    }
+
     /// Returns the localized display name, if available.
     ///
     /// # Example

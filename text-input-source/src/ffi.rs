@@ -24,7 +24,10 @@ unsafe extern "C" {
 
     pub static kTISPropertyInputSourceCategory: CFStringRef;
     pub static kTISPropertyInputSourceIsEnabled: CFStringRef;
+    pub static kTISPropertyInputSourceIsEnableCapable: CFStringRef;
     pub static kTISPropertyInputSourceID: CFStringRef;
+    pub static kTISPropertyBundleID: CFStringRef;
+    pub static kTISPropertyInputSourceType: CFStringRef;
     pub static kTISPropertyLocalizedName: CFStringRef;
     pub static kTISCategoryKeyboardInputSource: CFStringRef;
 }
