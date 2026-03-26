@@ -99,6 +99,22 @@ impl TisManager {
         list_input_sources_impl(Some(&filter), include_all_installed)
     }
 
+    /// Returns input sources matching the given bundle identifier.
+    ///
+    /// When `include_all_installed` is `false`, the returned list is limited to
+    /// sources that are currently enabled. When `true`, installed sources that
+    /// are not currently enabled may also be included.
+    pub fn list_input_sources_with_bundle_id(
+        &self,
+        bundle_id: &str,
+        include_all_installed: bool,
+    ) -> Result<Vec<InputSource>> {
+        let bundle_id_key = tis_constant_string(PropertyKind::BundleId.key());
+        let bundle_id_value = CFString::new(bundle_id);
+        let filter = CFDictionary::from_CFType_pairs(&[(bundle_id_key, bundle_id_value)]);
+        list_input_sources_impl(Some(&filter), include_all_installed)
+    }
+
     /// Returns the current keyboard input source.
     ///
     /// # Example
