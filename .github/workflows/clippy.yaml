@@ -1,4 +1,4 @@
-name: Build check
+name: Clippy
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      should-build: ${{ steps.filter.outputs.build }}
+      should-lint: ${{ steps.filter.outputs.lint }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -35,7 +35,7 @@ jobs:
         id: filter
         with:
           filters: |
-            build:
+            lint:
               - "**/*.rs"
               - "**/*.nix"
               - "**/flake.nix"
@@ -43,24 +43,14 @@ jobs:
               - "**/Cargo.toml"
               - "**/Cargo.lock"
 
-  build:
-    name: Build (${{ matrix.system }})
-    # DeterminateNix does not support x86_64-darwin natively.
-    # Use aarch64-darwin runner with Rosetta 2 to build for x86_64-darwin.
+  clippy:
+    name: Run Clippy
     runs-on: macos-15
     needs: detect-changes
-    if: >-
-      needs.detect-changes.outputs.should-build == 'true' ||
-      contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
+    if: needs.detect-changes.outputs.should-lint == 'true'
     timeout-minutes: 30
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        system:
-          - aarch64-darwin
-          - x86_64-darwin
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -68,11 +58,11 @@ jobs:
           persist-credentials: false
 
       - name: Install Nix
-        uses: DeterminateSystems/determinate-nix-action@a18f73c54ca8525de051e73c31512a67f44df919 # v3.17.1
+        uses: DeterminateSystems/determinate-nix-action@131015bad844610e5e6300f8a143bf625d3e74f4 # v3.17.0
         with:
           extra-conf: |
             extra-substituters = https://nix-cache.cffnpwr.dev
             extra-trusted-public-keys = cffnpwr-nixpkgs-extras:dmp2DUGwdqawLCPOsOcRxU/NpCO/qA1jha/8rmoSzvA=
 
-      - name: Build
-        run: nix build --print-build-logs --system ${{ matrix.system }}
+      - name: Run Clippy
+        run: nix develop --command cargo clippy --all

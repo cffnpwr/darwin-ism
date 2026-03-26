@@ -8,6 +8,9 @@ readme.workspace = true
 homepage.workspace = true
 repository.workspace = true
 
+[lints]
+workspace = true
+
 [[bin]]
 name = "darwin-ism"
 path = "src/main.rs"
@@ -34,3 +37,11 @@ repository = "https://github.com/cffnpwr/darwin-ism"
 
 [workspace.dependencies]
 thiserror = "2.0.18"
+
+[workspace.lints.rust]
+warnings = "deny"
+
+[workspace.lints.clippy]
+all = "deny"
+restriction = "deny"
+pedantic = "deny"
