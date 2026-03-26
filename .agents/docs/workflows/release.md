@@ -23,12 +23,12 @@ This project uses [release-please](https://github.com/googleapis/release-please)
 
 ## Version in Code
 
-The version string in `Sources/darwin-ism/CLI.swift` is updated automatically by release-please via marker comments:
+The version string in `Cargo.toml` is updated automatically by release-please via marker comments:
 
-```swift
-// x-release-please-start-version
-version: "0.1.0",
-// x-release-please-end
+```toml
+# x-release-please-start-version
+version = "0.1.0"
+# x-release-please-end
 ```
 
 ## Artifacts

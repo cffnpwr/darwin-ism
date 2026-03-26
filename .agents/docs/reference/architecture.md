@@ -2,53 +2,114 @@
 
 ## Overview
 
-darwin-ism is a single-target Swift CLI application that wraps the macOS Carbon Framework's TIS (Text Input Services) API.
+darwin-ism is a Rust CLI application that wraps the macOS Carbon Framework's TIS (Text Input Services) API. The project is a Cargo workspace with two crates.
 
 ```
-CLI (swift-argument-parser)
-  └── InputSourceManager (static query methods)
-        └── InputSource (TISInputSource wrapper)
-              └── Carbon Framework TIS API
+CLI (clap derive)                     — src/cli.rs
+  └── High-level API                  — src/lib.rs
+        └── TisManager (query methods) — text-input-source/src/tis_manager.rs
+              └── InputSource (TISInputSourceRef wrapper) — text-input-source/src/input_source.rs
+                    └── Carbon Framework TIS API (hand-written FFI) — text-input-source/src/ffi.rs
 ```
 
-## Source Files
+## Workspace Structure
 
-### CLI.swift
-Main entry point using `@main` attribute. Defines:
+### `darwin-ism` (root crate)
 
-- **DarwinISM**: Root `ParsableCommand` with subcommands
-- **ListSources**: Lists input sources with optional filters (`--enabled`, `--bundle-id`)
-- **Enable**: Enables an input source by ID
-- **Disable**: Disables an input source by ID, with special ABC keyboard workaround
+The main binary crate.
 
-Also contains wide character display utilities (`isWideCharacter`, `displayWidth`, `padToWidth`) for proper CJK output alignment.
+#### `src/main.rs`
 
-### InputSource.swift
-Value type wrapping `TISInputSource`. Provides Swift-friendly access to:
-- `id`, `bundleID`, `localizedName`, `type` (string properties)
-- `isEnabled`, `isEnableCapable` (boolean properties)
-- `enable()`, `disable()` (returns `OSStatus`)
+Minimal entry point. Parses CLI args and calls `cli::run()`.
 
-Properties are extracted via `TISGetInputSourceProperty()` with safe CF type casting.
+#### `src/cli.rs`
 
-### InputSourceManager.swift
-Stateless `enum` with static methods:
-- `list(includeAllInstalled:bundleID:)` — query input sources
-- `find(byID:)` — find a specific input source
-- `listEnabled()` — list only enabled sources
+CLI definition and command implementations using clap derive:
+
+- **`Cli`**: Root struct with optional `--version` flag and subcommand
+- **`Commands`**: Enum of subcommands (`List`, `Enable`, `Disable`)
+- **`ListArgs`**: `--enabled` flag and `--bundle-id` filter
+- **`EnableArgs`**: positional `<id>` argument
+- **`DisableArgs`**: positional `<id>` argument
+
+Also contains wide character display utilities (`is_wide_char`, `display_width`, `pad_to_width`) for proper CJK output alignment.
+
+Build-time version information is embedded via `build.rs`:
+```rust
+pub const VERSION: &str = concat!(
+    env!("CARGO_PKG_VERSION"),
+    "\ncommit: ", env!("DARWIN_ISM_GIT_HASH"),
+    "\nbuilt-at: ", env!("DARWIN_ISM_BUILT_AT"),
+);
+```
+
+#### `src/lib.rs`
+
+High-level API that wraps `text-input-source`:
+
+```rust
+pub fn list(include_all_installed: bool) -> Result<Vec<InputSource>>
+pub fn list_enabled() -> Result<Vec<InputSource>>
+pub fn find_by_id(id: &str) -> Result<Option<InputSource>>
+pub fn enable(id: &str) -> Result<bool>
+pub fn disable(id: &str) -> Result<bool>
+```
+
+### `text-input-source` (library crate)
+
+TIS API Rust library, published as a reusable workspace member.
+
+#### `text-input-source/src/ffi.rs`
+
+Hand-written `unsafe extern "C"` FFI bindings to the Carbon Framework TIS API:
+- `TISCreateInputSourceList`, `TISEnableInputSource`, `TISDisableInputSource`, etc.
+- `kTISPropertyInputSourceID`, `kTISPropertyInputSourceIsEnabled`, etc.
+- Linked via `#[link(name = "Carbon", kind = "framework")]`
+
+#### `text-input-source/src/input_source.rs`
+
+`InputSource` type wrapping `TISInputSourceRef`:
+- Memory managed with `CFRetain`/`CFRelease` via `Clone`/`Drop`
+- Marked `!Send + !Sync` via `PhantomData<Rc<()>>` — TIS API is not thread-safe
+- Methods: `id()`, `bundle_id()`, `localized_name()`, `input_source_type()`, `is_enabled()`, `is_enable_capable()`, `enable()`, `disable()`, `select()`
+
+#### `text-input-source/src/tis_manager.rs`
+
+`TisManager` type with query methods:
+- `list_input_sources(include_all_installed)` — all input sources
+- `list_keyboard_input_sources(include_all_installed)` — keyboard category filter
+- `list_input_sources_with_bundle_id(bundle_id, include_all_installed)` — bundle ID filter
+- `current_keyboard_input_source()` — currently active source
+
+#### `text-input-source/src/lib.rs`
+
+Public API surface, error types, and global mutex:
+
+```rust
+pub enum TisError {
+    NullResult(OperationKind),
+    Status(OperationKind, OSStatus),
+    MissingProperty(PropertyKind),
+    UnexpectedPropertyType(PropertyKind),
+}
+```
+
+All TIS operations are wrapped in `with_tis_lock()` — a global `Mutex` guard — because the TIS API is not thread-safe.
 
 ## Key Design Patterns
 
-- **Enum as namespace**: `InputSourceManager` is an enum (not instantiable) used purely for static methods
-- **Safe CF bridging**: All CF type conversions use fallback values ("Unknown") to handle missing properties
-- **Exit codes**: Defined as `AppExitCode` enum (success=0, notFound=1, operationFailed=2, invalidArgument=3)
+- **`!Send + !Sync`**: `PhantomData<Rc<()>>` enforces single-thread use of `InputSource` and `TisManager`
+- **Global mutex**: `with_tis_lock()` serializes all TIS API calls
+- **CF memory management**: `from_create_rule()` for owned pointers, `from_get_rule()` for borrowed; `Clone` CFRetains, `Drop` CFReleases
+- **Build-time metadata**: `build.rs` embeds git hash and build timestamp via env vars
 
 ## ABC Keyboard Workaround
 
-When disabling the ABC keyboard layout, macOS may silently refuse. The `Disable` command implements a multi-step workaround:
+When disabling the ABC keyboard layout, macOS may silently refuse. The `disable()` function in `src/lib.rs` implements a multi-step workaround:
 
 1. Attempt direct disable
-2. If the source remains enabled, enable Japanese Romaji input (Kotoeri) temporarily
-3. Enable Roman mode in Kotoeri
-4. Retry the disable
-5. Clean up temporary input sources if possible
+2. If the source ID matches `com.apple.keylayout.ABC*` and it remains enabled:
+   - Enable Kotoeri (Japanese Romaji) if not already enabled
+   - Enable Kotoeri Roman mode (ASCII input)
+   - Retry the disable
+   - Clean up temporarily enabled Kotoeri sources
