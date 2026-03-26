@@ -3,13 +3,12 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use core_foundation::base::{CFGetTypeID, CFRelease, CFRetain, CFTypeRef, TCFType as _};
+use core_foundation::base::{CFGetTypeID, CFRelease, CFRetain, TCFType as _};
 use core_foundation::number::{CFBooleanGetTypeID, CFBooleanGetValue, CFBooleanRef};
 use core_foundation::string::{CFString, CFStringGetTypeID, CFStringRef};
 use core_foundation_sys::base::OSStatus;
 
 use crate::{OperationKind, PropertyKind, Result, TisError, ffi, with_tis_lock};
-
 
 /// A macOS text input source.
 ///
@@ -35,6 +34,10 @@ pub struct InputSource {
 impl InputSource {
     /// Returns the stable input source identifier, if available.
     ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the property has an unexpected Core Foundation type.
+    ///
     /// # Example
     ///
     /// ```no_run
@@ -50,6 +53,10 @@ impl InputSource {
     }
 
     /// Returns the bundle identifier, if available.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the property has an unexpected Core Foundation type.
     pub fn bundle_id(&self) -> Result<Option<String>> {
         self.get_string_property(PropertyKind::BundleId)
     }
@@ -58,16 +65,28 @@ impl InputSource {
     ///
     /// The returned value is a raw string such as `"TISTypeKeyboardLayout"` or
     /// `"TISTypeKeyboardInputMethod"`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the property has an unexpected Core Foundation type.
     pub fn input_source_type(&self) -> Result<Option<String>> {
         self.get_string_property(PropertyKind::InputSourceType)
     }
 
     /// Returns whether this input source can be enabled.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the property is missing or has an unexpected Core Foundation type.
     pub fn is_enable_capable(&self) -> Result<bool> {
         self.get_required_bool_property(PropertyKind::IsEnableCapable)
     }
 
     /// Returns the localized display name, if available.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the property has an unexpected Core Foundation type.
     ///
     /// # Example
     ///
@@ -85,6 +104,10 @@ impl InputSource {
 
     /// Returns whether this input source is currently enabled.
     ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the property is missing or has an unexpected Core Foundation type.
+    ///
     /// # Example
     ///
     /// ```no_run
@@ -100,6 +123,10 @@ impl InputSource {
     }
 
     /// Selects this input source.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the underlying TIS API call fails.
     ///
     /// # Example
     ///
@@ -124,6 +151,10 @@ impl InputSource {
 
     /// Enables this input source.
     ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the underlying TIS API call fails.
+    ///
     /// # Example
     ///
     /// ```no_run
@@ -146,6 +177,10 @@ impl InputSource {
     }
 
     /// Disables this input source.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the underlying TIS API call fails.
     ///
     /// # Example
     ///
@@ -175,7 +210,7 @@ impl InputSource {
                 return Ok(None);
             }
 
-            let type_id = unsafe { CFGetTypeID(value as CFTypeRef) };
+            let type_id = unsafe { CFGetTypeID(value) };
             if type_id != unsafe { CFStringGetTypeID() } {
                 return Err(TisError::UnexpectedPropertyType(property));
             }
@@ -192,7 +227,7 @@ impl InputSource {
                 return Err(TisError::MissingProperty(property));
             }
 
-            let type_id = unsafe { CFGetTypeID(value as CFTypeRef) };
+            let type_id = unsafe { CFGetTypeID(value) };
             if type_id != unsafe { CFBooleanGetTypeID() } {
                 return Err(TisError::UnexpectedPropertyType(property));
             }
@@ -213,7 +248,7 @@ impl InputSource {
     }
 
     pub(crate) unsafe fn from_get_rule(raw: ffi::TISInputSourceRef) -> Self {
-        let retained = unsafe { CFRetain(raw as CFTypeRef) as ffi::TISInputSourceRef };
+        let retained = unsafe { CFRetain(raw.cast_const()).cast_mut() };
         unsafe { Self::from_create_rule(retained) }
     }
 }
@@ -227,7 +262,7 @@ impl Clone for InputSource {
 impl Drop for InputSource {
     fn drop(&mut self) {
         unsafe {
-            CFRelease(self.raw as CFTypeRef);
+            CFRelease(self.raw.cast_const());
         }
     }
 }

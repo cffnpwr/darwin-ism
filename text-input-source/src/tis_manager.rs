@@ -2,13 +2,20 @@ use std::marker::PhantomData;
 use std::rc::Rc;
 
 use core_foundation::array::{CFArrayGetCount, CFArrayGetValueAtIndex, CFArrayRef};
-use core_foundation::base::{Boolean, CFRelease, CFTypeRef, TCFType as _};
-use core_foundation::dictionary::CFDictionary;
+use core_foundation::base::{Boolean, CFRelease, CFTypeRef, TCFType};
+use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::string::CFString;
 
 use crate::input_source::InputSource;
 use crate::{
-    InputSourceCategoryValue, OperationKind, PropertyKind, Result, TisError, ffi, tis_constant_string, with_tis_lock
+    InputSourceCategoryValue,
+    OperationKind,
+    PropertyKind,
+    Result,
+    TisError,
+    ffi,
+    tis_constant_string,
+    with_tis_lock,
 };
 
 /// Entry point for querying and changing macOS text input sources.
@@ -44,6 +51,7 @@ impl TisManager {
     /// let _ = manager.current_keyboard_input_source()?;
     /// # Ok::<(), text_input_source::TisError>(())
     /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self {
             _not_send_sync: PhantomData,
@@ -55,6 +63,10 @@ impl TisManager {
     /// When `include_all_installed` is `false`, the returned list is limited to
     /// sources that are currently enabled. When `true`, installed sources that
     /// are not currently enabled may also be included.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the underlying TIS API call fails.
     ///
     /// # Example
     ///
@@ -75,6 +87,10 @@ impl TisManager {
     /// When `include_all_installed` is `false`, the returned list is limited to
     /// sources that are currently enabled. When `true`, installed sources that
     /// are not currently enabled may also be included.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the underlying TIS API call fails.
     ///
     /// # Example
     ///
@@ -104,6 +120,10 @@ impl TisManager {
     /// When `include_all_installed` is `false`, the returned list is limited to
     /// sources that are currently enabled. When `true`, installed sources that
     /// are not currently enabled may also be included.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the underlying TIS API call fails.
     pub fn list_input_sources_with_bundle_id(
         &self,
         bundle_id: &str,
@@ -116,6 +136,10 @@ impl TisManager {
     }
 
     /// Returns the current keyboard input source.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TisError`] if the underlying TIS API call returns NULL.
     ///
     /// # Example
     ///
@@ -138,7 +162,9 @@ impl TisManager {
 fn copy_current_keyboard_input_source() -> Result<ffi::TISInputSourceRef> {
     let raw = unsafe { ffi::TISCopyCurrentKeyboardInputSource() };
     if raw.is_null() {
-        Err(TisError::NullResult(OperationKind::CopyCurrentKeyboardInputSource))
+        Err(TisError::NullResult(
+            OperationKind::CopyCurrentKeyboardInputSource,
+        ))
     } else {
         Ok(raw)
     }
@@ -149,15 +175,9 @@ fn list_input_sources_impl(
     include_all_installed: bool,
 ) -> Result<Vec<InputSource>> {
     with_tis_lock(|| {
-        let filter_ref = filter
-            .map(|dictionary| dictionary.as_concrete_TypeRef())
-            .unwrap_or(std::ptr::null());
+        let filter_ref = filter.map_or(std::ptr::null(), TCFType::as_concrete_TypeRef);
 
-        let bool_to_boolean = |b| match b {
-            true => 1,
-            false => 0,
-        };
-        let array_ref = create_input_source_list(filter_ref, bool_to_boolean(include_all_installed))?;
+        let array_ref = create_input_source_list(filter_ref, u8::from(include_all_installed))?;
 
         let result = input_sources_from_array(array_ref);
         unsafe {
@@ -168,7 +188,7 @@ fn list_input_sources_impl(
 }
 
 fn create_input_source_list(
-    properties: core_foundation_sys::dictionary::CFDictionaryRef,
+    properties: CFDictionaryRef,
     include_all_installed: Boolean,
 ) -> Result<CFArrayRef> {
     let array_ref = unsafe { ffi::TISCreateInputSourceList(properties, include_all_installed) };
@@ -181,12 +201,16 @@ fn create_input_source_list(
 
 fn input_sources_from_array(array_ref: CFArrayRef) -> Vec<InputSource> {
     let len = unsafe { CFArrayGetCount(array_ref) };
+    #[allow(
+        clippy::cast_sign_loss,
+        reason = "CFArrayGetCount always returns a non-negative value"
+    )]
     let mut result = Vec::with_capacity(len as usize);
 
     for index in 0..len {
         let value = unsafe { CFArrayGetValueAtIndex(array_ref, index) };
         if !value.is_null() {
-            result.push(unsafe { InputSource::from_get_rule(value as ffi::TISInputSourceRef) });
+            result.push(unsafe { InputSource::from_get_rule(value.cast_mut()) });
         }
     }
 

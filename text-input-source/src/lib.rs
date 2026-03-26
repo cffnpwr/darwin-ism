@@ -99,12 +99,14 @@ impl OperationKind {
     const TIS_COPY_CURRENT_KEYBOARD_INPUT_SOURCE_OP: &str = "TISCopyCurrentKeyboardInputSource";
     const TIS_CREATE_INPUT_SOURCE_LIST_OP: &str = "TISCreateInputSourceList";
 
-    fn name(&self) -> &'static str {
+    fn name(self) -> &'static str {
         match self {
             OperationKind::SelectInputSource => Self::TIS_SELECT_INPUT_SOURCE_OP,
             OperationKind::EnableInputSource => Self::TIS_ENABLE_INPUT_SOURCE_OP,
             OperationKind::DisableInputSource => Self::TIS_DISABLE_INPUT_SOURCE_OP,
-            OperationKind::CopyCurrentKeyboardInputSource => Self::TIS_COPY_CURRENT_KEYBOARD_INPUT_SOURCE_OP,
+            OperationKind::CopyCurrentKeyboardInputSource => {
+                Self::TIS_COPY_CURRENT_KEYBOARD_INPUT_SOURCE_OP
+            }
             OperationKind::CreateInputSourceList => Self::TIS_CREATE_INPUT_SOURCE_LIST_OP,
         }
     }

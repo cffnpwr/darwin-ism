@@ -1,7 +1,5 @@
 use clap::{CommandFactory as _, Parser, Subcommand};
 
-use darwin_ism;
-
 pub const VERSION: &str = concat!(
     env!("CARGO_PKG_VERSION"),
     "\ncommit: ",
@@ -62,20 +60,27 @@ pub struct DisableArgs {
 
 pub fn run(cli: Cli) -> anyhow::Result<()> {
     if cli.version {
-        println!("{}", VERSION);
+        println!("{VERSION}");
         return Ok(());
     }
     match cli.command {
-        Some(Commands::List(args)) => run_list(args),
-        Some(Commands::Enable(args)) => run_enable(args),
-        Some(Commands::Disable(args)) => run_disable(args),
+        Some(Commands::List(args)) => run_list(&args),
+        Some(Commands::Enable(args)) => run_enable(&args),
+        Some(Commands::Disable(args)) => run_disable(&args),
         None => Cli::command()
             .print_help()
             .map_err(|error| anyhow::anyhow!("failed to print help: {error}")),
     }
 }
 
-fn run_list(args: ListArgs) -> anyhow::Result<()> {
+struct Row {
+    id: String,
+    enabled: String,
+    type_str: String,
+    name: String,
+}
+
+fn run_list(args: &ListArgs) -> anyhow::Result<()> {
     let sources = if args.enabled {
         darwin_ism::list_enabled()?
     } else if let Some(ref bundle_id) = args.bundle_id {
@@ -89,13 +94,6 @@ fn run_list(args: ListArgs) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    struct Row {
-        id: String,
-        enabled: String,
-        type_str: String,
-        name: String,
-    }
-
     let rows: Vec<Row> = sources
         .iter()
         .map(|source| {
@@ -106,8 +104,7 @@ fn run_list(args: ListArgs) -> anyhow::Result<()> {
                 .unwrap_or_else(|| "Unknown".into());
             let enabled = source
                 .is_enabled()
-                .map(|e| if e { "true" } else { "false" })
-                .unwrap_or("Unknown")
+                .map_or("Unknown", |e| if e { "true" } else { "false" })
                 .to_string();
             let type_str = source
                 .input_source_type()
@@ -169,18 +166,20 @@ fn run_list(args: ListArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn run_enable(args: EnableArgs) -> anyhow::Result<()> {
-    match darwin_ism::enable(&args.id)? {
-        false => println!("Already enabled: {}", args.id),
-        true => println!("Enabled: {}", args.id),
+fn run_enable(args: &EnableArgs) -> anyhow::Result<()> {
+    if darwin_ism::enable(&args.id)? {
+        println!("Enabled: {}", args.id);
+    } else {
+        println!("Already enabled: {}", args.id);
     }
     Ok(())
 }
 
-fn run_disable(args: DisableArgs) -> anyhow::Result<()> {
-    match darwin_ism::disable(&args.id)? {
-        false => println!("Already disabled: {}", args.id),
-        true => println!("Disabled: {}", args.id),
+fn run_disable(args: &DisableArgs) -> anyhow::Result<()> {
+    if darwin_ism::disable(&args.id)? {
+        println!("Disabled: {}", args.id);
+    } else {
+        println!("Already disabled: {}", args.id);
     }
     Ok(())
 }

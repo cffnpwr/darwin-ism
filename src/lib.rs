@@ -23,12 +23,20 @@ const KOTOERI_ROMAN_MODE_ID: &str = "com.apple.inputmethod.Kotoeri.RomajiTyping.
 /// Returns all installed input sources.
 ///
 /// When `include_all_installed` is `false`, only currently enabled sources are returned.
+///
+/// # Errors
+///
+/// Returns [`Error`] if the TIS API call fails.
 pub fn list(include_all_installed: bool) -> Result<Vec<InputSource>> {
     let manager = TisManager::new();
     Ok(manager.list_input_sources(include_all_installed)?)
 }
 
 /// Returns all installed input sources matching the given bundle ID.
+///
+/// # Errors
+///
+/// Returns [`Error`] if the TIS API call fails.
 pub fn list_with_bundle_id(
     bundle_id: &str,
     include_all_installed: bool,
@@ -38,6 +46,10 @@ pub fn list_with_bundle_id(
 }
 
 /// Returns only the currently enabled input sources.
+///
+/// # Errors
+///
+/// Returns [`Error`] if the TIS API call fails.
 pub fn list_enabled() -> Result<Vec<InputSource>> {
     let sources = list(false)?;
     let mut enabled = Vec::new();
@@ -50,6 +62,10 @@ pub fn list_enabled() -> Result<Vec<InputSource>> {
 }
 
 /// Finds an input source by its ID.
+///
+/// # Errors
+///
+/// Returns [`Error`] if the TIS API call fails.
 pub fn find_by_id(id: &str) -> Result<Option<InputSource>> {
     let sources = list(true)?;
     for source in sources {
@@ -64,6 +80,11 @@ pub fn find_by_id(id: &str) -> Result<Option<InputSource>> {
 ///
 /// Returns `Ok(false)` if the source was already enabled, `Ok(true)` if it was
 /// successfully enabled.
+///
+/// # Errors
+///
+/// Returns [`Error::NotFound`] if no source with the given ID exists, or [`Error::NotEnableCapable`]
+/// if the source cannot be enabled, or [`Error::OperationFailed`] if the TIS API call fails.
 pub fn enable(id: &str) -> Result<bool> {
     let source = find_by_id(id)?.ok_or_else(|| Error::NotFound(id.to_owned()))?;
 
@@ -86,6 +107,11 @@ pub fn enable(id: &str) -> Result<bool> {
 ///
 /// For `com.apple.keylayout.ABC*` sources that cannot be disabled directly,
 /// a workaround via Kotoeri (Japanese Romaji input) is attempted automatically.
+///
+/// # Errors
+///
+/// Returns [`Error::NotFound`] if no source with the given ID exists, or [`Error::OperationFailed`]
+/// if the TIS API call fails.
 pub fn disable(id: &str) -> Result<bool> {
     let source = find_by_id(id)?.ok_or_else(|| Error::NotFound(id.to_owned()))?;
 

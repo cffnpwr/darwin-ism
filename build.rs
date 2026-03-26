@@ -24,9 +24,7 @@ fn main() {
 
     // --- built-at ---
     println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
-    let built_at = get_source_date_epoch()
-        .or_else(get_current_time)
-        .unwrap_or_else(|| "unknown".to_owned());
+    let built_at = get_source_date_epoch().unwrap_or_else(get_current_time);
     println!("cargo:rustc-env=DARWIN_ISM_BUILT_AT={built_at}");
 }
 
@@ -50,7 +48,12 @@ fn get_git_hash_from_jj() -> Option<String> {
         .output()
         .ok()
         .filter(|o| o.status.success())
-        .map(|o| String::from_utf8(o.stdout).unwrap().trim().to_owned())
+        .map(|o| {
+            String::from_utf8(o.stdout)
+                .expect("jj/git output is valid UTF-8")
+                .trim()
+                .to_owned()
+        })
         .filter(|s| !s.is_empty())
 }
 
@@ -60,7 +63,12 @@ fn get_git_hash_from_git() -> Option<String> {
         .output()
         .ok()
         .filter(|o| o.status.success())
-        .map(|o| String::from_utf8(o.stdout).unwrap().trim().to_owned())
+        .map(|o| {
+            String::from_utf8(o.stdout)
+                .expect("jj/git output is valid UTF-8")
+                .trim()
+                .to_owned()
+        })
         .filter(|s| !s.is_empty())
 }
 
@@ -74,7 +82,7 @@ fn get_source_date_epoch() -> Option<String> {
     Some(dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
 }
 
-fn get_current_time() -> Option<String> {
+fn get_current_time() -> String {
     let dt: DateTime<Utc> = std::time::SystemTime::now().into();
-    Some(dt.format("%Y-%m-%dT%H:%M:%SZ").to_string())
+    dt.format("%Y-%m-%dT%H:%M:%SZ").to_string()
 }

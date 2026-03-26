@@ -1,3 +1,9 @@
+#![allow(
+    clippy::panic,
+    clippy::manual_assert,
+    reason = "build script: panic on error is acceptable"
+)]
+
 use std::cmp::Ordering;
 use std::env;
 use std::ffi::OsString;
@@ -21,7 +27,7 @@ fn main() {
             .unwrap_or_else(|error| panic!("failed to determine macOS deployment target: {error}")),
     };
 
-    if compare_versions( &deployment_target, MINIMUM_MACOS_VERSION) == Ordering::Less {
+    if compare_versions(&deployment_target, MINIMUM_MACOS_VERSION) == Ordering::Less {
         panic!(
             "text-input-source-rs requires macOS {MINIMUM_MACOS_VERSION} or later, got deployment target {deployment_target}"
         );
@@ -72,11 +78,7 @@ fn parse_version(version: &str) -> (u32, u32, u32) {
 }
 
 fn normalize_version_string(version: &str) -> &str {
-    version
-        .split('=')
-        .next_back()
-        .map(str::trim)
-        .unwrap_or(version)
+    version.split('=').next_back().map_or(version, str::trim)
 }
 
 fn parse_component(component: &str) -> u32 {
