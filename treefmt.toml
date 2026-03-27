@@ -1,13 +1,14 @@
 [global]
-excludes = [".build/**", ".git/**", "result/**", ".serena/**"]
+excludes = [".git/**", "result/**", ".serena/**", "target/**"]
 
 [formatter.nix]
 command = "nixfmt"
 includes = ["*.nix"]
 
-[formatter.swift]
-command = "swiftformat"
-includes = ["*.swift"]
+[formatter.rust]
+command = "rustfmt"
+options = ["--config-path", "./rustfmt.toml"]
+includes = ["*.rs"]
 
 [formatter.yaml]
 command = "yamlfmt"

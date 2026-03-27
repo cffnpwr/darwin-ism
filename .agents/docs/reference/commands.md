@@ -2,7 +2,7 @@
 
 ## Development Environment
 
-All commands below (`swift`, `swiftlint`, `treefmt`, etc.) must be run inside the Nix dev shell.
+All commands below (`cargo`, `treefmt`, etc.) must be run inside the Nix dev shell.
 Enter it first with `nix develop`, or prefix any command with `nix develop --command <cmd>`.
 
 | Command | Description |
@@ -14,8 +14,8 @@ Enter it first with `nix develop`, or prefix any command with `nix develop --com
 
 | Command | Description |
 |---------|-------------|
-| `swift build` | Debug build |
-| `swift build -c release` | Release build |
+| `cargo build` | Debug build |
+| `cargo build --release` | Release build |
 | `nix build` | Reproducible Nix build |
 | `nix run` | Build and run via Nix |
 
@@ -23,32 +23,23 @@ Enter it first with `nix develop`, or prefix any command with `nix develop --com
 
 | Command | Description |
 |---------|-------------|
-| `./.build/debug/darwin-ism list` | List all input sources |
-| `./.build/debug/darwin-ism list --enabled` | List enabled sources only |
-| `./.build/debug/darwin-ism list --bundle-id <id>` | Filter by bundle ID |
-| `./.build/debug/darwin-ism enable <id>` | Enable an input source |
-| `./.build/debug/darwin-ism disable <id>` | Disable an input source |
+| `./target/debug/darwin-ism list` | List all input sources |
+| `./target/debug/darwin-ism list --enabled` | List enabled sources only |
+| `./target/debug/darwin-ism list --bundle-id <id>` | Filter by bundle ID |
+| `./target/debug/darwin-ism enable <id>` | Enable an input source |
+| `./target/debug/darwin-ism disable <id>` | Disable an input source |
 
 ## Quality Checks
 
 | Command | Description |
 |---------|-------------|
-| `swiftlint lint --config .swiftlint.yaml --strict` | Lint Swift (strict mode) |
-| `nix run .#lint -- --config .swiftlint.yaml --strict` | Lint via Nix |
+| `cargo clippy -- -D warnings` | Lint Rust (deny warnings) |
+| `cargo test` | Run tests |
 | `treefmt` | Format all files |
-| `treefmt --fail-on-change` | Check formatting |
-| `nix run .#format` | Format via Nix |
-| `nix run .#format -- --fail-on-change` | Check formatting via Nix |
+| `treefmt --fail-on-change` | Check formatting (CI mode) |
 
-## Version Checks
+## Rust Dependency Management
 
-| Command | Description |
-|---------|-------------|
-| `scripts/check-swift-version.sh` | Verify Swift version consistency |
-| `scripts/check-tool-versions.sh` | Check tool version compatibility |
-
-## Nix Dependency Management
-
-After changing Swift dependencies in `Package.swift`:
-1. Run `swift package resolve` to update `Package.resolved`
-2. Regenerate Nix files with swiftpm2nix
+After changing dependencies in `Cargo.toml`:
+1. Run `cargo update` to update `Cargo.lock`
+2. Commit both `Cargo.toml` and `Cargo.lock`

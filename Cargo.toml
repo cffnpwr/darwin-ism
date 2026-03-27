@@ -1,0 +1,55 @@
+[package]
+name = "darwin-ism"
+description = "macOS Input Source Manager CLI"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "darwin-ism"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.102"
+clap = { version = "4.6.0", features = ["derive"] }
+text-input-source = { path = "./text-input-source" }
+thiserror.workspace = true
+
+[build-dependencies]
+chrono = "0.4.44"
+
+[workspace]
+resolver = "3"
+members = ["text-input-source"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/cffnpwr/darwin-ism"
+repository = "https://github.com/cffnpwr/darwin-ism"
+
+[workspace.dependencies]
+thiserror = "2.0.18"
+
+[workspace.lints.rust]
+warnings = "deny"
+
+[workspace.lints.clippy]
+all = "deny"
+pedantic = "deny"
+# restriction lints (opt-in individually)
+absolute_paths = "deny"
+allow_attributes_without_reason = "deny"
+clone_on_ref_ptr = "deny"
+manual_assert = "deny"
+mod_module_files = "deny"
+panic = "deny"
+unwrap_used = "deny"
+unused_trait_names = "deny"

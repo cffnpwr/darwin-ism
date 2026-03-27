@@ -1,17 +1,11 @@
 pre-commit:
   parallel: true
   commands:
-    check-swift-version:
-      run: sh scripts/check-swift-version.sh
-
-    check-tool-versions:
-      run: sh scripts/check-tool-versions.sh
-
     format:
-      glob: "*.{swift,nix}"
+      glob: "*.{rs,nix}"
       run: treefmt --fail-on-change {staged_files}
       stage_fixed: true
 
     lint:
-      glob: "*.swift"
-      run: swiftlint lint --config .swiftlint.yaml --strict {staged_files}
+      glob: "*.rs"
+      run: cargo clippy --all
