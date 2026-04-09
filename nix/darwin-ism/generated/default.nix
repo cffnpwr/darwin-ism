@@ -2,6 +2,6 @@
 {
   workspaceStateFile = ./workspace-state.json;
   hashes = {
-    "swift-argument-parser" = "sha256-c0/UcHFZiGbfWMwekQ0Ln1A6NWSeHm9VFOxEYVrB8P0=";
+    "swift-argument-parser" = "sha256-1J68vCB4P9MBznK4cPX9TzLQId+r5//45M3C8G6zg+c=";
   };
 }
