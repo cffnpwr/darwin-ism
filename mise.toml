@@ -1,6 +1,6 @@
 [tools]
 "aqua:numtide/treefmt" = "v2.5.0"
 "asdf:swiftformat" = "0.58.7"
-lefthook = "2.1.5"
+lefthook = "2.1.6"
 swift = "5.10.1"
 swiftlint = "0.63.2"
