@@ -3,4 +3,4 @@
 "asdf:swiftformat" = "0.58.7"
 lefthook = "2.1.11"
 swift = "5.10.1"
-swiftlint = "0.65.0"
+swiftlint = "0.65.1"
