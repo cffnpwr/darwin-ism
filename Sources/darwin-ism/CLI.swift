@@ -65,7 +65,7 @@ struct DarwinISM: ParsableCommand {
     commandName: "darwin-ism",
     abstract: "macOS Input Source Manager CLI",
     // x-release-please-start-version
-    version: "0.1.0",
+    version: "1.0.0",
     // x-release-please-end
     subcommands: [ListSources.self, Enable.self, Disable.self]
   )
