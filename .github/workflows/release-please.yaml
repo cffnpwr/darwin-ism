@@ -46,7 +46,7 @@ jobs:
     name: Build (${{ matrix.system }})
     # DeterminateNix does not support x86_64-darwin natively.
     # Use aarch64-darwin runner with Rosetta 2 to build for x86_64-darwin.
-    runs-on: macos-15
+    runs-on: macos-26
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     timeout-minutes: 30
@@ -82,7 +82,7 @@ jobs:
 
   create-universal:
     name: Create Universal Binary
-    runs-on: macos-15
+    runs-on: macos-26
     needs: [release-please, build]
     if: needs.release-please.outputs.release_created == 'true'
     timeout-minutes: 10

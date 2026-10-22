@@ -47,7 +47,7 @@ jobs:
     name: Build (${{ matrix.system }})
     # DeterminateNix does not support x86_64-darwin natively.
     # Use aarch64-darwin runner with Rosetta 2 to build for x86_64-darwin.
-    runs-on: macos-15
+    runs-on: macos-26
     needs: detect-changes
     if: >-
       needs.detect-changes.outputs.should-build == 'true' ||
