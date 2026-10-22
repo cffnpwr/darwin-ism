@@ -17,7 +17,7 @@ permissions: {}
 jobs:
   update-swiftpm2nix:
     name: Update swiftpm2nix generated files
-    runs-on: macos-15
+    runs-on: macos-26
     if: contains(github.event.pull_request.labels.*.name, 'renovate')
     timeout-minutes: 30
     permissions:
